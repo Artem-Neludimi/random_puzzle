@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:collection/collection.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 
 class Game extends StatelessWidget {
@@ -11,7 +12,7 @@ class Game extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => GameCubit()..load(),
+      create: (_) => GameCubit(),
       child: Scaffold(
         body: BlocListener<GameCubit, GameState>(
           listenWhen: (previous, current) => current.isWon,
@@ -84,8 +85,19 @@ class _Floating extends StatelessWidget {
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   const _Body();
+
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<GameCubit>().load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,12 +226,13 @@ class GameCubit extends Cubit<GameState> {
 
   Future<void> load() async {
     try {
-      final response = await http.get(Uri.parse('https://random.imagecdn.app/800/640'));
+      final response = await http.get(Uri.parse('https://picsum.photos/800/640'));
       emit(state.copyWith(
         imageBytes: response.bodyBytes,
         isLoading: false,
       ));
     } catch (e) {
+      Fluttertoast.showToast(msg: 'Error: $e');
       load();
     }
   }
